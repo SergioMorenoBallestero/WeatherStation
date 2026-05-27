@@ -3,23 +3,49 @@
 
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <DHT.h>
+
+#define READING_ARRAY_SIZE 10
 
 class Sensor
 /*A sensor will give a reading which we will check. We make use of some kind of timer to add
 a new reading to the array*/
 {
-    private:
-        double current_reading;
-        double readings[10];
-        int readings_performed;
+    protected:
+        float current_reading;
+        float readings[READING_ARRAY_SIZE];
+        uint16_t readings_performed;
     public:
-        DallasTemperature sensor; // 100% a better way to do this exists
-        Sensor(OneWire* wire);
-        ~Sensor() = default;
-        double getReading() const;
-        void updateReading();
+        Sensor();
+        virtual ~Sensor() = default;
+        virtual void begin() = 0;
+        float getReading() const;
+        virtual void updateReading() = 0;
         void addToReadings();
-        double computeAverage();
+        float computeAverage();
+        void printReadings();
+};
+
+class TempSensor : public Sensor
+{
+    private:
+        DallasTemperature hw;
+    public:
+        TempSensor(OneWire* wire_bus);
+        virtual ~TempSensor() = default;
+        void begin() override;
+        void updateReading() override;
+};
+
+class HumSensor : public Sensor
+{
+    private:
+        DHT hw;
+    public:
+        HumSensor(uint8_t pin, uint8_t model);
+        virtual ~HumSensor() = default;
+        void begin() override;
+        void updateReading() override;
 };
 
 #endif

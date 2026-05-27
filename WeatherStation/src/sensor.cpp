@@ -2,38 +2,79 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-// initialize everything to 0
-Sensor::Sensor(OneWire* wire)
- : sensor(wire), current_reading{}, readings{}, readings_performed{}
+// constructors
+Sensor::Sensor()
+ : current_reading{}, readings{}, readings_performed{}
 {}
 
+TempSensor::TempSensor(OneWire* wire_bus) : Sensor(), hw{wire_bus}
+{}
 
-double Sensor::getReading() const
+HumSensor::HumSensor(uint8_t pin, uint8_t model) : Sensor(), hw{pin,model}
+{}
+
+// base class methods
+float Sensor::getReading() const
 {return current_reading;}
-
-
-void Sensor::updateReading()
-{
-    sensor.requestTemperatures();
-    double temp = sensor.getTempCByIndex(0);
-    if (temp != DEVICE_DISCONNECTED_C)
-        current_reading = temp;
-    else
-        Serial.println("Error: device disconnected");
-}
-
 
 // this function is supposed to be called when the reading has updated
 void Sensor::addToReadings()
 {
-    readings[readings_performed % 10] = current_reading;
+    readings[readings_performed % READING_ARRAY_SIZE] = current_reading;
     ++readings_performed;
 }
 
-double Sensor::computeAverage()
+float Sensor::computeAverage()
 {
-    double sum{};
-    for (double reading : readings)
+    float sum{};
+    for (float reading : readings)
         sum += reading;
-    return sum / 10;
+    return sum / READING_ARRAY_SIZE;
+}
+
+void Sensor::printReadings()
+{
+    Serial.println("Last 10 measurements:");
+    Serial.print("{");
+    for (size_t i = 0; i < READING_ARRAY_SIZE; ++i)
+    {
+        Serial.print(readings[i]);
+        if (i == READING_ARRAY_SIZE - 1)
+            Serial.print("}");
+        else
+            Serial.print(",");
+    }
+}
+
+// hardware-specific methods
+void TempSensor::begin()
+{hw.begin();}
+
+void TempSensor::updateReading()
+{
+    hw.requestTemperatures();
+    float temp = hw.getTempCByIndex(0);
+    if (temp == DEVICE_DISCONNECTED_C)
+    {
+        Serial.println("Error: device disconnected");
+        return;
+    }
+    current_reading = temp;
+    addToReadings();
+        
+}
+
+void HumSensor::begin()
+{hw.begin();}
+
+void HumSensor::updateReading()
+{
+    float reading = hw.readHumidity();
+    if (reading < 0 || reading > 100) 
+    {
+            Serial.println("Error: the reading was invalid");
+            return;
+    }
+    current_reading = reading;
+    addToReadings();
 }
