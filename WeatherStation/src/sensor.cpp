@@ -4,7 +4,7 @@
 
 // constructors
 Sensor::Sensor()
- : current_reading{}, readings{}, readings_performed{}
+ : current_reading{}, max_reading{}, min_reading{}, first_reading{true}
 {}
 
 TempSensor::TempSensor(OneWire* wire_bus) : Sensor(), hw{wire_bus}
@@ -13,38 +13,30 @@ TempSensor::TempSensor(OneWire* wire_bus) : Sensor(), hw{wire_bus}
 HumSensor::HumSensor(uint8_t pin, uint8_t model) : Sensor(), hw{pin,model}
 {}
 
+
 // base class methods
 float Sensor::getReading() const
 {return current_reading;}
 
-// this function is supposed to be called when the reading has updated
-void Sensor::addToReadings()
-{
-    readings[readings_performed % READING_ARRAY_SIZE] = current_reading;
-    ++readings_performed;
-}
+float Sensor::getMax() const
+{return max_reading;}
 
-float Sensor::computeAverage()
-{
-    float sum{};
-    for (float reading : readings)
-        sum += reading;
-    return sum / READING_ARRAY_SIZE;
-}
+float Sensor::getMin() const
+{return min_reading;}
 
-void Sensor::printReadings()
+void Sensor::updateExtremes()
 {
-    Serial.println("Last 10 measurements:");
-    Serial.print("{");
-    for (size_t i = 0; i < READING_ARRAY_SIZE; ++i)
+    if (first_reading)
     {
-        Serial.print(readings[i]);
-        if (i == READING_ARRAY_SIZE - 1)
-            Serial.print("}");
-        else
-            Serial.print(",");
+        max_reading = min_reading = current_reading;
+        first_reading = false;
     }
+    else if (current_reading > max_reading)
+        max_reading = current_reading;
+    else if (current_reading < min_reading)
+        min_reading = current_reading;
 }
+
 
 // hardware-specific methods
 void TempSensor::begin()
@@ -60,8 +52,7 @@ void TempSensor::updateReading()
         return;
     }
     current_reading = temp;
-    addToReadings();
-        
+    updateExtremes();
 }
 
 void HumSensor::begin()
@@ -69,12 +60,12 @@ void HumSensor::begin()
 
 void HumSensor::updateReading()
 {
-    float reading = hw.readHumidity();
-    if (reading < 0 || reading > 100) 
+    float humidity = hw.readHumidity();
+    if (humidity < 0 || humidity > 100) 
     {
             Serial.println("Error: the reading was invalid");
             return;
     }
-    current_reading = reading;
-    addToReadings();
+    current_reading = humidity;
+    updateExtremes();
 }

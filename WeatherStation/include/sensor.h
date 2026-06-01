@@ -8,23 +8,23 @@
 #define READING_ARRAY_SIZE 10
 
 class Sensor
-/*A sensor will give a reading which we will check. We make use of some kind of timer to add
-a new reading to the array*/
 {
     protected:
         float current_reading;
-        float readings[READING_ARRAY_SIZE];
-        uint16_t readings_performed;
+        float max_reading;
+        float min_reading;
+        bool first_reading;
     public:
         Sensor();
         virtual ~Sensor() = default;
         virtual void begin() = 0;
         float getReading() const;
+        float getMax() const;
+        float getMin() const;
         virtual void updateReading() = 0;
-        void addToReadings();
-        float computeAverage();
-        void printReadings();
+        void updateExtremes();
 };
+
 
 class TempSensor : public Sensor
 {
@@ -36,6 +36,7 @@ class TempSensor : public Sensor
         void begin() override;
         void updateReading() override;
 };
+
 
 class HumSensor : public Sensor
 {
