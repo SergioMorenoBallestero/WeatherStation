@@ -10,7 +10,11 @@ WeatherStation is a basic Arduino project featuring the Arduino Nano development
 
 # Software requirements and dependencies
 * VS Code IDE with the PlatformIO extension installed
-* Library dependencies: milesburton/DallasTemperature@^4.0.6, paulstoffregen/OneWire@^2.3.8, adafruit/DHT sensor library@^1.4.7, blackhack/LCD_I2C@^2.4.0
+* Library dependencies:
+  * milesburton/DallasTemperature@^4.0.6
+  * paulstoffregen/OneWire@^2.3.8
+  * adafruit/DHT sensor library@^1.4.7
+  * blackhack/LCD_I2C@^2.4.0
 
 # How to build
 * Wiring part:
