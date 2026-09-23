@@ -16,6 +16,7 @@ void Display::begin()
 
 }
 
+// this function could probably be shorter
 void Display::printReadings(TempSensor& temp_sensor, HumSensor& hum_sensor)
 {
     Sensor* sensor;
@@ -32,10 +33,24 @@ void Display::printReadings(TempSensor& temp_sensor, HumSensor& hum_sensor)
         return;
     case PrintMode::TEMPERATURE:
         sensor = &temp_sensor;
+        if (sensor->getReading() == DEVICE_DISCONNECTED_C)
+        {
+            hw.print("Temp error");
+            hw.setCursor(0,1);
+            hw.print("Check connection");
+            return;
+        }
         hw.print("Temps(C):");
         break;
     case PrintMode::HUMIDITY:
         sensor = &hum_sensor;
+        if (isnan(sensor->getReading())) 
+        {
+            hw.print("Humidity error");
+            hw.setCursor(0,1);
+            hw.print("Check connection");
+            return;
+        }
         hw.print("Humid(%):");
         break;
     }

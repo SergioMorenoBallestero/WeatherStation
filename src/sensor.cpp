@@ -46,12 +46,13 @@ void TempSensor::updateReading()
 {
     hw.requestTemperatures();
     float temp = hw.getTempCByIndex(0);
+    current_reading = temp;
     if (temp == DEVICE_DISCONNECTED_C)
     {
-        Serial.println("Error: device disconnected");
+        // try to initialize the device again
+        begin();
         return;
     }
-    current_reading = temp;
     updateExtremes();
 }
 
@@ -61,11 +62,7 @@ void HumSensor::begin()
 void HumSensor::updateReading()
 {
     float humidity = hw.readHumidity();
-    if (humidity < 0 || humidity > 100) 
-    {
-            Serial.println("Error: the reading was invalid");
-            return;
-    }
     current_reading = humidity;
+    if (isnan(humidity)) return;
     updateExtremes();
 }
