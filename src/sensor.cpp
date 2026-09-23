@@ -61,10 +61,10 @@ void HumSensor::begin()
 void HumSensor::updateReading()
 {
     float humidity = hw.readHumidity();
-    if (humidity < 0 || humidity > 100) 
+    if (humidity < 0 || humidity > 100 || humidity == NAN) 
     {
-            Serial.println("Error: the reading was invalid");
-            return;
+        Serial.println("Error: the reading was invalid");
+        return;
     }
     current_reading = humidity;
     updateExtremes();
